@@ -1,0 +1,61 @@
+This is a rough personal note for me to write my personal insights as the projects goes through 
+
+I used ai as mentor rather than it giving me codes or doing the work for that i how i planned to use the ai.
+
+when i researched this data was recommend because this was a portugese student's sata set which includded the info i needed to create the ML model
+
+our problem was ro assces the background and past of the studentas to predect wheather they will pass or fail in the final exams and how well they do in the class  
+ans this data set contaions all the nessecary info i needed
+
+i loded the csv file 
+then inspected it , looked ithere was any null values , dupicates , and there was non of it 
+
+then went on plotting the graphs to understand the data more 
+i used about 7-8 cols i think among the 33 cols to plot a graph 
+
+as you can see from the graphs we found several relationshisp 
+such as 
+1. higher the prior knowledge , the better the score 
+2. higher the study time , the better the score 
+3. higher the parental education , the better the score 
+4. higher the study time , the better the score 
+5. higher the study time , the better the score 
+
+there where i needed the ai the most amd also had to go to YT to search more videos on asscessing the graphs 
+also need help to decide which cols i needed to take , then plotted the graphs with all the relevant cols with requires lables on them 
+ok now i found so of the relation among G3(the col we want to predect)
+
+such as the past scores where the one which influenced the most of the G3
+then the  study time 
+then the parental education 
+
+created the heat map as reccomed by ai it will so the correlaion so again went to YT to learn then plotted it and conformed the G! and G2 was highly related to G3
+espesially G2
+then i used the ai to help me with the algo and best possible way to do it 
+and we landed on doing random forrest and regression
+
+before that i saw a video on YT of different models of ML in yt also  to learn more about it 
+
+then trained the model 
+and found that random forest was more accurate than regression
+
+also while training the model i only used 80% of the data and tested it on the remaining 20% 
+this is to make sure the model is not overfitting
+used test size as 20% and random state 42 so that every time i run the code it gives the exact same split and results.
+
+ forgot to mention used pandas to load and manipulate the data
+used matplotlib and seaborn to plot the graphs
+used scikit-learn to train the model and evaluate its performance
+also in the box plot of parent education i noticed that parents with none education showed higher marks at first,
+but when i checked the data it was because only 2 to 3 students had parents with 0 education so it was just a small sample distortion,
+while for the rest of the 390 students higher parent education clearly gave better marks.
+
+is there anything lest to mention?....
+
+also found that 38 students got 0 in final exam even though they passed term 1 and term 2, 
+which means they were dropouts or missed the exam rather than failing gradually.
+
+and finally
+trained both models and found that random forest was more accurate with 81.5% accuracy 
+and only 1.16 marks error compared to linear regression.
+
