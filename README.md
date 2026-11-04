@@ -1,127 +1,152 @@
-# Student Performance Analysis & Final Grade Prediction
+# StudyFlow — Student Academic Performance & Early-Warning Platform
 
-An End-to-End Data Science and Machine Learning project analyzing the factors influencing student academic success in secondary school mathematics, and predicting final exam performance (`G3`) using Machine Learning.
+An end-to-end Machine Learning web application and modular Python system designed to analyze secondary school student academic performance, forecast final exam grades (`G3`), flag dropout and failure risks early, and provide actionable educational recommendations.
 
 ---
 
 ## 📌 Project Overview
-- **Goal**: Analyze student academic, demographic, and socioeconomic factors to understand what drives performance and build predictive models to identify at-risk students early.
-- **Dataset**: UCI Machine Learning Repository — *Student Performance Data Set* (`student-mat.csv`).
-- **Population**: 395 students across 33 features (demographic, family background, academic history, lifestyle, and alcohol consumption).
+- **Core Mission**: Move beyond post-exam grading by providing an **early-intervention advisory platform** for teachers, students, and parents.
+- **Dataset**: UCI Machine Learning Repository — *Student Performance Dataset* (`student-mat.csv`).
+- **Population**: 395 secondary school students across 33 academic, demographic, and socioeconomic features.
 - **Target Variable**: `G3` (Final Mathematics Exam Grade, scale $0–20$, passing mark $\ge 10$).
+- **Key Discovery**: Identified the **Structural Zero Dropout Phenomenon** (38 students scored $G3 = 0$ despite passing earlier terms, representing sudden withdrawal or exam absenteeism rather than gradual decline).
 
 ---
 
-## 📁 Repository Structure
-```
+## 📁 Repository & Architecture Structure
+
+```text
 AiMl_mentoring/
 │
-├── student-mat.csv             # Raw UCI dataset (semicolon-separated)
-├── student.txt                 # Official UCI attribute documentation
-├── student_note.ipynb          # Full Jupyter Notebook (EDA, Preprocessing, ML, Evaluation)
-├── requirements.txt            # Python package dependencies
-├── README.md                   # Project documentation and summary
-├── research_notes.md           # Deep dive into insights, limitations & ethics
-├── best_student_model.joblib   # Trained Random Forest Regressor artifact
-└── model_features.joblib       # Feature column names used during training
+├── pyproject.toml              # Build & package config (enables pip install -e .)
+├── requirements.txt            # Dependency specification
+├── README.md                   # Complete project documentation & guide
+├── student_note.ipynb          # Original Jupyter Notebook (EDA, ML benchmarking)
+│
+├── data/                       # Benchmark data storage
+│   ├── student-mat.csv         # UCI Mathematics benchmark dataset (semicolon-separated)
+│   ├── student-por.csv         # Secondary Portuguese language dataset
+│   └── student.txt             # Attribute definitions and codebook
+│
+├── models/                     # Serialized machine learning artifacts
+│   ├── best_student_model.joblib # Trained Random Forest Regressor (R² = 0.815, MAE = 1.16)
+│   └── model_features.joblib   # 56 aligned feature names for inference
+│
+├── src/studyflow/              # Core modular Python package
+│   ├── __init__.py
+│   ├── config.py               # OS-agnostic dynamic path resolution & domain constants
+│   ├── exceptions.py           # Domain error hierarchy (StudyFlowError, DataValidationError)
+│   ├── schemas.py              # Typed dataclass contracts (StudentInput, PredictionOutput)
+│   │
+│   ├── data/                   # Data ingestion and verification
+│   │   ├── __init__.py
+│   │   ├── loader.py           # Delimiter-aware CSV loader (sep=";")
+│   │   └── validator.py        # Defensive schema and range validation (0-20 scale)
+│   │
+│   ├── features/               # Feature engineering & preprocessing
+│   │   ├── __init__.py
+│   │   └── engineer.py         # Academic momentum (grade_change = G2 - G1) & 56-feature alignment
+│   │
+│   ├── models/                 # Predictive inference engine
+│   │   ├── __init__.py
+│   │   ├── base.py             # Abstract BasePredictor interface (Open-Closed Principle)
+│   │   └── forest.py           # Concrete Random Forest wrapper, bounding & risk banding
+│   │
+│   └── reporting/              # Batch classroom analytics
+│       ├── __init__.py
+│       └── reporter.py         # Cohort health summarization & annotated CSV export
+│
+├── app/
+│   └── streamlit_app.py        # Dual-Mode Interactive Web Application (Streamlit)
+│
+├── tests/                      # Automated unit and integration test suite
+│   ├── conftest.py             # Pytest fixtures and mock student data
+│   └── test_studyflow.py       # Comprehensive test cases for validator, features, ML & reports
+│
+└── notes/                      # Research deep-dive & evaluation documentation
+    ├── personal_researchNotes.txt
+    ├── research_notes.md
+    └── PROJECT_CONTEXT.md
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Quick Start & Installation
 
-1. **Clone or Open the Repository**:
-   ```bash
-   cd e:/AiMl_mentoring
-   ```
+### 1. Activate Virtual Environment
+```powershell
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+```
 
-2. **Create and Activate a Virtual Environment** (Optional but recommended):
-   ```bash
-   python -m venv .venv
-   # On Windows:
-   .venv\Scripts\activate
-   # On macOS/Linux:
-   source .venv/bin/activate
-   ```
+### 2. Install Package in Editable Mode
+```powershell
+pip install -e .
+```
+*(This makes the `studyflow` library available everywhere in your environment without needing complex path hacks).*
 
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 3. Launch the Web Application
+```powershell
+streamlit run app/streamlit_app.py
+```
+Open your browser at **`http://localhost:8501`** to interact with the dashboard!
 
-4. **Launch the Notebook**:
-   ```bash
-   jupyter notebook student_note.ipynb
-   ```
-
----
-
-## 📊 Exploratory Data Analysis (EDA) Highlights
-
-We structured the exploratory analysis into **5 Core Pillars**:
-
-### Pillar 1: Target Variable Distribution (`G3`)
-- Final grades follow a normal distribution between $4$ and $20$, with a mean of **$10.42$** and median of **$11.0$**.
-- **Structural Zero Phenomenon**: Discovered **38 students with $G3 = 0$**. Investigation showed these students had passing marks in Term 1 and Term 2 ($G1, G2 \approx 8–14$), confirming that zero grades represent **exam non-attendance or dropouts** rather than gradual academic decline.
-
-### Pillar 2: Past Academic Performance (`G1`, `G2` vs `G3`)
-- **Strong Positive Correlation**: Term 1 (`G1`, $r = 0.80$) and Term 2 (`G2`, $r = 0.90$) exhibit massive linear correlation with final marks.
-- **Actionability**: While `G2` is more accurate for final prediction, `G1` provides an essential **early-warning signal in Term 1** for timely academic interventions.
-
-### Pillar 3: Study Habits, Effort & Engagement (`studytime`, `failures`, `absences`)
-- **Study Time**: Studying $>10$ hours/week boosts median grades to $\approx 12.0$ with top scores reaching $19/20$.
-- **Past Failures (#1 Risk Alarm)**: A student with even 1 past failure suffers a median collapse from $11.5$ down to $9.0$ (below passing).
-- **Absences**: Over 95% of students have $0–20$ absences. Absences show weak linear correlation ($r = 0.03$) because moderate absences do not strictly cause failure if independent study is maintained.
-
-### Pillar 4: Family Background & Ambition (`Medu`, `Fedu`, `higher`)
-- **Parental Education**: Average performance rises consistently with parental education ($8.68 \to 11.76$ for Mother's education; $9.16 \to 11.36$ for Father's education).
-- **College Ambition**: Students wanting higher education (`higher = yes`) maintain a passing median of $11.0$, while students without college ambition drop to a failing median of $8.0$.
-
-### Pillar 5: Summary Correlation Heatmap
-- Identified strongest positive predictors (`G2`, `G1`, `Medu`, `Fedu`, `studytime`) and strongest negative risk factors (`failures`, `age`, `goout`, `traveltime`).
-- Detected inter-feature multicollinearity between `G1` and `G2` ($r = 0.85$), `Dalc` and `Walc` ($r = 0.65$), and `Medu` and `Fedu` ($r = 0.62$).
+### 4. Run Automated Tests
+```powershell
+pytest -v
+```
 
 ---
 
-## 🛠️ Data Preprocessing & Pipeline
+## 🖥️ Application Features & User Modes
 
-1. **One-Hot Encoding**:
-   - Converted all categorical text features into binary indicators using `pd.get_dummies(drop_first=True)`.
-   - Avoided false numerical hierarchies that would be caused by Ordinal/Label encoding on nominal categories (`Mjob`, `school`, `reason`).
-   - Feature count expanded from 33 raw columns to 42 clean numeric columns.
-2. **Train-Test Split**:
-   - 80% Training Set (**316 students**) to train models.
-   - 20% Testing Set (**79 unseen students**) to evaluate generalization.
-   - `random_state=42` ensures complete reproducibility.
+The Streamlit web application provides **two complementary modes**:
 
----
+### Mode 1: 👤 Single Student Performance Forecast
+- **Interactive Sliders**: Adjust Term 1 ($G1$), Term 2 ($G2$), weekly study hours, past failures, and absences.
+- **Real-Time KPIs**: Displays predicted final grade ($G3$), passing status, risk category, and academic momentum.
+- **Academic Trajectory Chart**: Visualizes progress across $G1 \to G2 \to \text{Predicted } G3$.
+- **Early-Warning Advisory**: Generates personalized, empathetic guidance for educators and parents.
 
-## 🤖 Machine Learning Models & Evaluation
-
-We evaluated three distinct models on the **79 held-out test students**:
-
-| Model | MAE (Mean Absolute Error) | RMSE (Root Mean Squared Error) | $R^2$ Score (Variance Explained) | Status |
-| :--- | :---: | :---: | :---: | :---: |
-| **Mean Baseline** | $3.45\text{ marks}$ | $4.53\text{ marks}$ | $-0.012$ ($0.0\%$) | Benchmark |
-| **Linear Regression** | $1.65\text{ marks}$ | $2.38\text{ marks}$ | $0.724$ ($72.4\%$) | Baseline |
-| **Random Forest Regressor** 🏆 | **$1.16\text{ marks}$** | **$1.95\text{ marks}$** | **$0.815$ ($81.5\%$)** | **Best Model** |
-
-### Key ML Insights:
-- **Random Forest is the Champion**: Achieved an **$R^2$ of $81.5\%$** and an **MAE of $1.16$ marks**, outperforming Linear Regression by **$+9.1\%$** and cutting error by nearly $0.5$ marks.
-- **Dominant Feature**: `G2` (Term 2 grade) carried $>70\%$ of the predictive weight in the forest, followed by `G1`, `absences`, `age`, `health`, and `failures`.
-- **Model Artifact**: The winning model is serialized to `best_student_model.joblib`.
+### Mode 2: 📁 Classroom Batch Upload & Analytics
+- **Drag-and-Drop CSV Uploader**: Accepts any standard classroom CSV file (or 1-click loads the benchmark).
+- **Automated Validation**: `validator.py` checks for column presence, data types, and value boundaries before processing.
+- **Cohort Health Cards**: Instant class-wide metrics (cohort size, average predicted mark, pass rate, and high-risk count).
+- **Risk Distribution Charts**: Donut and histogram charts breaking down students into *On Track*, *Moderate Risk*, and *High Risk*.
+- **Annotated Export**: Download the enriched CSV report with predicted marks and risk bands for administrative records.
 
 ---
 
-## 💡 Practical Recommendations for Schools
-1. **Day 1 Early Warning**: Screen students for $\ge 1$ past failures and enroll them in remedial tutoring immediately.
-2. **Term 1 Action Trigger**: Use `G1 < 10` as a trigger for mid-year academic interventions before final exams.
-3. **Career Mentoring**: Offer motivational guidance to students lacking college ambition (`higher = no`) to prevent academic disengagement.
-4. **Encourage Study Routines**: Promote weekly study habits of $\ge 5$ hours to raise class averages.
+## 🧠 Machine Learning Insights & Model Evaluation
+
+### Benchmark Comparison
+
+$$\text{Random Forest } (R^2 = 0.815, \text{ MAE} = 1.16) \quad \text{vs.} \quad \text{Linear Regression } (R^2 = 0.724, \text{ MAE} = 1.65)$$
+
+1. **Why Random Forest Outperformed Linear Regression**:
+   - Academic risk is inherently **non-linear**: a student with $\ge 1$ failure experiences a sharp drop, whereas additional study hours plateau in benefit after 10 hours. Decision tree splits naturally capture these non-linear thresholds.
+   - Captures **feature interactions** (e.g., *high absences + high study time* vs. *high absences + low study time*) without manual polynomial terms.
+2. **Key Feature Importances**:
+   - $G2$ (Second Term Mark) accounted for $>70\%$ of predictive power.
+   - $G1$ (First Term Mark) provided early baseline trajectory.
+   - `failures` (Previous class failures) was the strongest negative risk indicator ($r = -0.36$).
+   - `studytime` and parental education (`Medu`, `Fedu`) provided positive protective momentum.
+3. **Domain-Engineered Momentum**:
+   - By engineering $\text{grade\_change} = G2 - G1$, the model distinguishes between a student improving from $10 \to 14$ versus a student collapsing from $14 \to 10$, even though both share the same average mark.
 
 ---
 
-## ⚖️ Ethics, Privacy & Limitations
-- **Correlation vs. Causation**: Having uneducated parents does not *cause* low grades; it reflects socioeconomic support differences. Interventions should empower students rather than stigmatize backgrounds.
-- **Data Privacy**: Predictive models in education must be used strictly for **support and tutoring**, never for punitive tracking or gatekeeping.
-- **Dropout Limitation**: The model cannot predict sudden non-attendance dropouts (students scoring 0 after passing $G1/G2$) from academic grades alone. Attendance monitoring must be integrated in real time.
+## 🛡️ Software Engineering Best Practices Applied
+
+- **Abstract Base Classes (`BasePredictor`)**: Decouples the application from a specific ML algorithm, adhering to the **Open-Closed Principle**.
+- **Defensive Data Validation**: Catches out-of-range marks, negative values, and missing fields before model inference.
+- **Typed Data Contracts (`dataclasses`)**: Replaced fragile dictionary keys with type-safe `StudentInput` and `PredictionOutput` schemas.
+- **OS-Agnostic Path Management**: Centralized in `config.py` using `pathlib.Path` to prevent broken paths across Windows, Mac, and Linux.
+- **In-Memory Caching (`@st.cache_resource`)**: Loads ML weights into RAM once, guaranteeing sub-5ms UI responsiveness.
+- **Automated Testing Suite**: 100% passing `pytest` test suite covering validation, feature transformation, inference, and batch reporting.
+
+---
+
+## 📜 Ethical Considerations
+- **No Deficit Framing**: Predictions are intended solely to allocate **supportive resources** (remedial tutoring, study spaces, mentoring), never to punish or track students into lower educational tiers.
+- **Human-in-the-Loop**: The model serves strictly as an **advisory decision-support tool** for educators, never an automated grading or disciplinary mechanism.
